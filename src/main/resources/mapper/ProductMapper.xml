@@ -24,26 +24,26 @@
         <result property="deletedAt" column="deleted_at"/>
     </resultMap>
     <select id="getAllNoDeleteStatusProducts" resultMap="ProductResultMap">
-        SELECT * FROM PRODUCTS WHERE is_deleted = 0;
+        SELECT * FROM Products WHERE is_deleted = 0;
     </select>
 
 
     <select id="getAllProducts" resultMap="ProductResultMap">
-        SELECT * FROM PRODUCTS ;
+        SELECT * FROM Products ;
     </select>
 
     <select id="getProductById" parameterType="int" resultMap="ProductResultMap">
-        SELECT * FROM PRODUCTS WHERE product_id = #{productId} AND is_deleted = 0;
+        SELECT * FROM Products WHERE product_id = #{productId} AND is_deleted = 0;
     </select>
 
     <!-- 根据id查询所有的商品 包括已删除商品-->
     <select id="getProductAllById" parameterType="int" resultMap="ProductResultMap">
-        SELECT * FROM PRODUCTS WHERE product_id = #{productId};
+        SELECT * FROM Products WHERE product_id = #{productId};
     </select>
 
     <!-- 更新商品信息 -->
     <update id="updateProductInfo" parameterType="com.fmcd.market.Entity.Products.Product">
-        UPDATE PRODUCTS
+        UPDATE Products
         <set>
             <if test="name != null">name = #{name},</if>
             <if test="categoryId != null">category_id = #{categoryId},</if>
@@ -61,7 +61,7 @@
 
     <!-- 商品上下架 -->
     <update id="updateProductStatus">
-        UPDATE PRODUCTS
+        UPDATE Products
         <set>
             status = #{status},
             is_deleted = CASE WHEN #{status} = 'deleted' THEN 1 ELSE 0 END,

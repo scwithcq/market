@@ -37,7 +37,7 @@ public interface ProductMapper {
 
     // 查询新品列表
     @Select("""
-        SELECT * FROM PRODUCTS
+        SELECT * FROM Products
         WHERE (is_new = 1 OR DATE(created_at) = CURDATE())
           AND status = 'on_sale'
           AND is_deleted = 0
@@ -47,6 +47,6 @@ public interface ProductMapper {
     List<Product> getNewProducts();
 
     // 管理端商品列表（含软删除）
-    @Select("SELECT * FROM products ORDER BY updated_at DESC")
+    @Select("SELECT * FROM Products ORDER BY updated_at DESC")
     List<Product> getAdminProductList();
 }

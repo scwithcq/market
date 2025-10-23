@@ -16,8 +16,8 @@ public class ProductServiceImpl implements ProductService {
     @Autowired
     private ProductMapper productMapper;
     // 注入mqtt
-    @Autowired
-    private MessageChannel outboundChannel;
+//    @Autowired
+//    private MessageChannel outboundChannel;
 
     @Override
     public List<Product> getAllNoDeleteStatusProducts() {
@@ -28,7 +28,7 @@ public class ProductServiceImpl implements ProductService {
     public Product getProductById(Integer productId) {
         // 测试
         // 当调用这个api的时候，进行一次发送信息请求
-        send("收到，信息已发送");
+//        send("收到，信息已发送");
         return productMapper.getProductById(productId);
     }
 
@@ -71,8 +71,8 @@ public class ProductServiceImpl implements ProductService {
     }
 
     // 发送信息 MQTT
-    public void send(String payload){
-        outboundChannel.send(MessageBuilder.withPayload(payload).build());
-    }
+//    public void send(String payload){
+//        outboundChannel.send(MessageBuilder.withPayload(payload).build());
+//    }
 }
 

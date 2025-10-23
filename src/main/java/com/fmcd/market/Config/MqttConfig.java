@@ -1,3 +1,4 @@
+/*
 package com.fmcd.market.Config;
 
 import org.eclipse.paho.client.mqttv3.IMqttClient;
@@ -37,7 +38,9 @@ public class MqttConfig {
     @Value("${mqtt.sub-topic}")
     private String subTopic;
 
-    /* --------- 工厂（带连接监听） --------- */
+    */
+/* --------- 工厂（带连接监听） --------- *//*
+
     @Bean
     public MqttPahoClientFactory factory() {
         DefaultMqttPahoClientFactory f = new DefaultMqttPahoClientFactory();
@@ -49,7 +52,9 @@ public class MqttConfig {
         opt.setKeepAliveInterval(60);
         opt.setAutomaticReconnect(true);
 
-        /* ===== 连接成功/失败 日志 ===== */
+        */
+/* ===== 连接成功/失败 日志 ===== *//*
+
         opt.setConnectionTimeout(5);
         try (IMqttClient tmp = new MqttClient(url, clientId + "_check", new MemoryPersistence())) {
             tmp.connect(opt);
@@ -63,7 +68,9 @@ public class MqttConfig {
         return f;
     }
 
-    /* --------- 订阅通道 --------- */
+    */
+/* --------- 订阅通道 --------- *//*
+
     @Bean
     public MessageProducer inbound(MqttPahoClientFactory factory) {
         MqttPahoMessageDrivenChannelAdapter adapter =
@@ -94,7 +101,9 @@ public class MqttConfig {
         return new DirectChannel();
     }
 
-    /* --------- 发布通道（可选） --------- */
+    */
+/* --------- 发布通道（可选） --------- *//*
+
     @Bean
     @ServiceActivator(inputChannel = "outboundChannel")
     public MessageHandler outbound(MqttPahoClientFactory factory) {
@@ -110,4 +119,4 @@ public class MqttConfig {
     public MessageChannel outboundChannel() {
         return new DirectChannel();
     }
-}
+}*/
