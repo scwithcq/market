@@ -1,11 +1,11 @@
 package com.fmcd.market.Service;
 
-import com.fmcd.market.Entity.Products.Product;
+import com.fmcd.market.entity.Products.Product;
 
 import java.util.List;
 
 public interface ProductService {
-    List<Product> getAllNoDeleteStatusProducts();
+    List<Product> getAllNoDeleteStatusProducts(String keyword);
     Product getProductById(Integer productId);
     int updateProductInfo(Product product);
     int updateProductStatus(Integer productId, String status, Integer operatorId);

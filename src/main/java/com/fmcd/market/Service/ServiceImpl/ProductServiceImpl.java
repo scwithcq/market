@@ -1,11 +1,9 @@
 package com.fmcd.market.Service.ServiceImpl;
 
-import com.fmcd.market.Entity.Products.Product;
+import com.fmcd.market.entity.Products.Product;
 import com.fmcd.market.Mapper.ProductMapper;
 import com.fmcd.market.Service.ProductService;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.integration.support.MessageBuilder;
-import org.springframework.messaging.MessageChannel;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -20,8 +18,14 @@ public class ProductServiceImpl implements ProductService {
 //    private MessageChannel outboundChannel;
 
     @Override
-    public List<Product> getAllNoDeleteStatusProducts() {
-        return productMapper.getAllNoDeleteStatusProducts();
+    public List<Product> getAllNoDeleteStatusProducts(String keyword) {
+        if (keyword == null || keyword.trim().isEmpty()) {
+            // 查询所有未删除商品
+            return productMapper.getAllNoDeleteStatusProducts();
+        } else {
+            // 模糊查询商品名称
+            return productMapper.getAllNoDeleteStatusProductsByKeyword(keyword);
+        }
     }
 
     @Override

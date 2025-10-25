@@ -1,4 +1,4 @@
-package com.fmcd.market.Entity.Products;
+package com.fmcd.market.entity.Products;
 
 import lombok.Data;
 

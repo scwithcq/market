@@ -1,7 +1,7 @@
 package com.fmcd.market.Controllers;
 
-import com.fmcd.market.Entity.goods.Goods;
-import com.fmcd.market.Entity.goods.GoodsRepository;
+import com.fmcd.market.entity.goods.Goods;
+import com.fmcd.market.entity.goods.GoodsRepository;
 import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;

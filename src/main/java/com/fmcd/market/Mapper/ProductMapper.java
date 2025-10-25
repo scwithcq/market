@@ -1,6 +1,6 @@
 package com.fmcd.market.Mapper;
 
-import com.fmcd.market.Entity.Products.Product;
+import com.fmcd.market.entity.Products.Product;
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
 import org.apache.ibatis.annotations.Select;
@@ -49,4 +49,8 @@ public interface ProductMapper {
     // 管理端商品列表（含软删除）
     @Select("SELECT * FROM Products ORDER BY updated_at DESC")
     List<Product> getAdminProductList();
+
+    // 通过前端传来的keyword值查询对应商品
+    List<Product> getAllNoDeleteStatusProductsByKeyword(@Param("keyword")String keyword);
+
 }

@@ -1,4 +1,4 @@
-package com.fmcd.market.Entity.goods;
+package com.fmcd.market.entity.goods;
 import jakarta.persistence.*;
 
 @Entity

@@ -1,11 +1,19 @@
 package com.fmcd.market.Controllers;
 
-import com.fmcd.market.Entity.Products.Product;
+import com.fmcd.market.Common.base.PageData;
+import com.fmcd.market.Common.base.Result;
+import com.fmcd.market.dto.Products.ProductResponseDTO;
+import com.fmcd.market.entity.Products.Product;
 import com.fmcd.market.Service.ProductService;
+import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
+import java.sql.Struct;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/api/products")
@@ -15,15 +23,49 @@ public class ProductController {
     private ProductService productService;
 
     // 4.1 获取所有商品（用户端）
-    @GetMapping
+/*    @GetMapping
     public List<Product> getProducts() {
         return productService.getAllNoDeleteStatusProducts();
-    }
+    }*/
 
+    // 4.1 获取所有商品（用户端）   --不包含页码等信息
+/*    @GetMapping
+    public Result<Map<String, Object>> getProducts() {
+        List<Product> products = productService.getAllNoDeleteStatusProducts();
+        List<ProductResponseDTO> productResponseDTOS = products.stream().map(product -> {
+                    ProductResponseDTO dto = new ProductResponseDTO();
+                    BeanUtils.copyProperties(product, dto);
+                    return dto;
+                }
+        ).collect(Collectors.toList());
+        BeanUtils.copyProperties(products, productResponseDTOS);
+        HashMap<String, Object> data = new HashMap<>();
+        data.put("items", productResponseDTOS);
+
+        return Result.success(data);
+    }*/
+
+    // 4.1 获取所有商品（用户端）  可以进行商品名称的模糊查询
+    @GetMapping
+    public Result<PageData<ProductResponseDTO>> getProducts(@RequestParam(value = "keyword",required = false)String keyword) {
+        List<Product> products = productService.getAllNoDeleteStatusProducts(keyword);
+        List<ProductResponseDTO> productResponseDTOS = products.stream().map(product -> {
+                    ProductResponseDTO dto = new ProductResponseDTO();
+                    BeanUtils.copyProperties(product, dto);
+                    return dto;
+                }
+        ).collect(Collectors.toList());
+        Integer total = productResponseDTOS.size(); //列表中元素的数量
+        PageData<ProductResponseDTO> pageData = new PageData<>(total, 10, 1, 1, productResponseDTOS);
+        return Result.success(pageData);
+    }
     // 4.2 获取商品详情   用户端/商家端
     @GetMapping("/{productId}")
-    public Product getProductDetail(@PathVariable Integer productId) {
-        return productService.getProductById(productId);
+    public Result<Map<String, Object>> getProductDetail(@PathVariable Integer productId) {
+        Product productDataById = productService.getProductById(productId);
+        HashMap<String, Object> data = new HashMap<>();
+        data.put("item", productDataById);
+        return Result.success(data);
     }
 
     // 4.3 商品信息维护  商家端/管理员
