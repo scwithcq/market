@@ -8,6 +8,7 @@
 *.zip
 *.tar.gz
 *.rar
+AllSql.txt
 out/
 logs/
 # 如果用了 Lombok、MapStruct 等生成的代码

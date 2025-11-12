@@ -1,0 +1,543 @@
+数据源: MyDemo@8.130.212.116
+架构: MyDemo
+表: Categories
+
+-- 商品分类表
+
+-- auto-generated definition
+create table Categories
+(
+    category_id int unsigned auto_increment comment '分类ID'
+        primary key,
+    name        varchar(100)                         not null comment '分类名称',
+    description varchar(500)                         null comment '分类描述',
+    created_at  timestamp  default CURRENT_TIMESTAMP null comment '创建时间',
+    updated_at  timestamp  default CURRENT_TIMESTAMP null on update CURRENT_TIMESTAMP comment '更新时间',
+    creator     int                                  null comment '创建人ID',
+    updator     int                                  null comment '更新人ID',
+    is_deleted  tinyint(1) default 0                 null comment '软删除 0未删 1已删',
+    deleted_at  timestamp                            null comment '删除时间',
+    constraint uk_name
+        unique (name)
+)
+    comment '商品分类表';
+
+create index idx_created_at
+    on Categories (created_at);
+
+create index idx_is_deleted
+    on Categories (is_deleted);
+
+
+数据源: MyDemo@8.130.212.116
+架构: MyDemo
+表: Detections
+
+-- 树莓派实时识别结果
+
+-- auto-generated definition
+create table Detections
+(
+    detect_id  int auto_increment comment '检测记录唯一标识'
+        primary key,
+    device_id  int                                   not null comment '来源树莓派设备ID',
+    category   varchar(100)                          null comment '识别出的商品大类',
+    name       varchar(100)                          null comment '识别出的商品名称',
+    confidence float                                 null comment '模型识别置信度(0-1)',
+    weight     float                                 null comment '传感器检测的重量(克)',
+    rgb_json   json                                  null comment '识别时的图像RGB数据',
+    created_at timestamp   default CURRENT_TIMESTAMP not null comment '识别时间戳',
+    updated_at timestamp   default CURRENT_TIMESTAMP not null on update CURRENT_TIMESTAMP comment '记录更新时间',
+    status     varchar(20) default 'pending'         not null comment 'pending/confirmed/rejected',
+    updator    int                                   null comment '确认或拒绝该识别结果的用户ID'
+)
+    comment '树莓派实时识别结果' collate = utf8mb4_0900_ai_ci;
+
+create index idx_created_at
+    on Detections (created_at);
+
+create index idx_device_id
+    on Detections (device_id);
+
+create index idx_device_time
+    on Detections (device_id, created_at, status);
+
+create index idx_status
+    on Detections (status);
+
+create index idx_updated_at
+    on Detections (updated_at);
+
+
+
+数据源: MyDemo@8.130.212.116
+架构: MyDemo
+表: Inventories
+
+-- 商品实时库存
+
+-- auto-generated definition
+create table Inventories
+(
+    inventory_id int auto_increment comment '库存记录唯一标识'
+        primary key,
+    product_id   int unsigned                             not null comment '所属商品ID',
+    stock        decimal(10, 2) default 0.00              not null comment '当前可用库存数量',
+    unit         varchar(20)    default '个'              not null comment '库存计量单位',
+    last_update  timestamp      default CURRENT_TIMESTAMP not null on update CURRENT_TIMESTAMP comment '库存最后变动时间',
+    created_at   timestamp      default CURRENT_TIMESTAMP not null comment '库存记录创建时间',
+    creator      int                                      null comment '创建该库存记录的用户ID',
+    updator      int                                      null comment '最后更新库存的用户ID',
+    constraint idx_product_id
+        unique (product_id),
+    constraint fk_inventories_product
+        foreign key (product_id) references Products (product_id)
+            on update cascade on delete cascade
+)
+    comment '商品实时库存' collate = utf8mb4_0900_ai_ci;
+
+create index idx_last_update
+    on Inventories (last_update);
+
+create index idx_stock
+    on Inventories (stock);
+
+
+
+数据源: MyDemo@8.130.212.116
+架构: MyDemo
+表: Model_Errors
+
+-- AI模型识别错误统计
+
+-- auto-generated definition
+create table Model_Errors
+(
+    error_id           int auto_increment comment '错误记录唯一标识'
+        primary key,
+    device_id          int                                 not null comment '产生错误的树莓派设备ID',
+    image_url          varchar(500)                        null comment '识别错误时的图片链接',
+    predicted_category varchar(100)                        null comment '模型预测的类别',
+    true_category      varchar(100)                        null comment '人工标注的正确类别',
+    confidence         float                               null comment '模型当时的置信度',
+    created_at         timestamp default CURRENT_TIMESTAMP not null comment '错误发生时间',
+    updated_at         timestamp default CURRENT_TIMESTAMP not null on update CURRENT_TIMESTAMP comment '记录更新时间',
+    creator            int                                 null comment '报告错误的用户ID',
+    updator            int                                 null comment '更新错误记录的用户ID'
+)
+    comment 'AI模型识别错误统计' collate = utf8mb4_0900_ai_ci;
+
+create index idx_created_at
+    on Model_Errors (created_at);
+
+create index idx_device_id
+    on Model_Errors (device_id);
+
+create index idx_device_time
+    on Model_Errors (device_id, created_at);
+
+create index idx_predicted
+    on Model_Errors (predicted_category);
+
+
+
+数据源: MyDemo@8.130.212.116
+架构: MyDemo
+表: Order_Items
+
+-- 订单商品明细
+
+-- auto-generated definition
+create table Order_Items
+(
+    item_id       int auto_increment comment '订单明细唯一标识'
+        primary key,
+    order_id      int                                   not null comment '所属订单ID',
+    product_id    int unsigned                          not null comment '商品ID',
+    product_name  varchar(100)                          not null comment '商品名称快照',
+    product_price decimal(10, 2)                        not null comment '下单时的商品单价快照',
+    quantity      int                                   not null comment '购买数量',
+    unit          varchar(10) default '斤'              not null comment '单位快照',
+    subtotal      decimal(10, 2)                        not null comment '小计金额',
+    created_at    timestamp   default CURRENT_TIMESTAMP not null comment '明细创建时间',
+    constraint fk_items_order
+        foreign key (order_id) references Orders (order_id)
+            on update cascade on delete cascade,
+    constraint fk_items_product
+        foreign key (product_id) references Products (product_id)
+            on update cascade
+)
+    comment '订单商品明细' collate = utf8mb4_0900_ai_ci;
+
+create index idx_order_id
+    on Order_Items (order_id);
+
+create index idx_order_product
+    on Order_Items (order_id, product_id);
+
+create index idx_product_id
+    on Order_Items (product_id);
+
+
+
+数据源: MyDemo@8.130.212.116
+架构: MyDemo
+表: Order_Status_Logs
+
+-- 订单状态变更日志
+
+-- auto-generated definition
+create table Order_Status_Logs
+(
+    log_id        int auto_increment comment '日志唯一标识'
+        primary key,
+    order_id      int                                 not null comment '所属订单ID',
+    old_status    varchar(20)                         null comment '变更前的状态（首次创建为NULL）',
+    new_status    varchar(20)                         not null comment '变更后的状态',
+    operator_type varchar(20)                         not null comment 'user/admin/system',
+    operator_id   int                                 null comment '操作人用户ID（系统操作为NULL）',
+    remark        varchar(500)                        null comment '状态变更原因或备注',
+    created_at    timestamp default CURRENT_TIMESTAMP not null comment '状态变更时间',
+    constraint fk_logs_order
+        foreign key (order_id) references Orders (order_id)
+            on update cascade on delete cascade
+)
+    comment '订单状态变更日志' collate = utf8mb4_0900_ai_ci;
+
+create index idx_created_at
+    on Order_Status_Logs (created_at);
+
+create index idx_operator
+    on Order_Status_Logs (operator_type, operator_id);
+
+create index idx_order_id
+    on Order_Status_Logs (order_id);
+
+create index idx_order_time
+    on Order_Status_Logs (order_id, created_at);
+
+
+
+数据源: MyDemo@8.130.212.116
+架构: MyDemo
+表: Orders
+
+-- 订单主表
+
+-- auto-generated definition
+create table Orders
+(
+    order_id     int auto_increment comment '订单唯一标识符'
+        primary key,
+    order_no     varchar(32)                           not null comment '订单业务编号',
+    user_id      int                                   not null comment '下单用户ID',
+    order_status varchar(20) default 'pending'         not null comment 'pending/paid/shipped/done/cancelled',
+    total_amount decimal(10, 2)                        not null comment '订单总金额',
+    user_address varchar(255)                          null comment '用户收货地址',
+    user_phone   varchar(20)                           null comment '用户联系电话',
+    remark       varchar(500)                          null comment '用户或商家备注',
+    created_at   timestamp   default CURRENT_TIMESTAMP not null comment '订单创建时间',
+    updated_at   timestamp   default CURRENT_TIMESTAMP not null on update CURRENT_TIMESTAMP comment '订单最后更新时间',
+    creator      int                                   null comment '下单用户ID（通常与user_id相同）',
+    updator      int                                   null comment '最后更新订单的操作员ID',
+    is_deleted   tinyint(1)  default 0                 not null comment '0=未删除，1=已删除',
+    deleted_at   timestamp                             null comment '软删除时间戳',
+    constraint idx_order_no
+        unique (order_no)
+)
+    comment '订单主表' collate = utf8mb4_0900_ai_ci;
+
+create index idx_created_at
+    on Orders (created_at);
+
+create index idx_is_deleted
+    on Orders (is_deleted);
+
+create index idx_order_status
+    on Orders (order_status);
+
+create index idx_status_time
+    on Orders (order_status, created_at, is_deleted);
+
+create index idx_user_id
+    on Orders (user_id);
+
+create index idx_user_status
+    on Orders (user_id, order_status, created_at, is_deleted);
+
+
+
+数据源: MyDemo@8.130.212.116
+架构: MyDemo
+表: Product_Samples
+
+-- 商品正负样本数据
+
+-- auto-generated definition
+create table Product_Samples
+(
+    sample_id          int auto_increment comment '样本ID'
+        primary key,
+    product_id         int unsigned                         null comment '所属商品ID（NULL表示废弃样本）',
+    type               varchar(10)                          not null comment 'positive/negative/rejected',
+    predicted_category varchar(100)                         null comment '模型预测类别',
+    true_category      varchar(100)                         null comment '人工标注正确类别',
+    confidence         float                                null comment '模型置信度',
+    rgb_json           json                                 not null comment '图像RGB特征数据',
+    reject_reason      varchar(50)                          null comment 'wrong_category/unsupported/low_quality',
+    uploaded_at        timestamp  default CURRENT_TIMESTAMP not null comment '上传时间',
+    updated_at         timestamp  default CURRENT_TIMESTAMP not null on update CURRENT_TIMESTAMP comment '更新时间',
+    creator            int                                  null comment '上传用户ID',
+    updator            int                                  null comment '最后更新用户ID',
+    is_deleted         tinyint(1) default 0                 not null comment '0=未删除，1=已删除',
+    deleted_at         timestamp                            null comment '软删除时间戳',
+    constraint fk_samples_product
+        foreign key (product_id) references Products (product_id)
+            on update cascade on delete set null
+)
+    comment '商品正负样本数据' collate = utf8mb4_0900_ai_ci;
+
+create index idx_is_deleted
+    on Product_Samples (is_deleted);
+
+create index idx_product_id
+    on Product_Samples (product_id);
+
+create index idx_product_type
+    on Product_Samples (product_id, type, uploaded_at, is_deleted);
+
+create index idx_type
+    on Product_Samples (type);
+
+create index idx_uploaded_at
+    on Product_Samples (uploaded_at);
+
+
+
+
+数据源: MyDemo@8.130.212.116
+架构: MyDemo
+表: Products
+
+-- 商品信息主表
+
+-- auto-generated definition
+create table Products
+(
+    product_id     int unsigned auto_increment
+        primary key,
+    name           varchar(100)                          not null comment '商品名称',
+    category_id    int unsigned                          not null comment '分类ID',
+    price          decimal(10, 2)                        not null comment '销售单价（元）',
+    unit           varchar(10) default '斤'              null comment '计量单位',
+    image_url      varchar(500)                          null comment '商品展示图片链接',
+    rgb_json       json                                  null comment 'RGB图像特征(JSON)',
+    status         varchar(20) default 'on_sale'         null comment '商品状态',
+    confidence     float                                 null comment '模型识别置信度 0-1',
+    is_recommend   tinyint(1)  default 0                 null comment '是否推荐 0否1是',
+    is_new         tinyint(1)  default 0                 null comment '是否新品 0否1是',
+    recommend_date date                                  null comment '推荐日期',
+    created_at     timestamp   default CURRENT_TIMESTAMP null comment '创建时间',
+    updated_at     timestamp   default CURRENT_TIMESTAMP null on update CURRENT_TIMESTAMP comment '更新时间',
+    creator        int                                   null comment '创建人ID',
+    updator        int                                   null comment '更新人ID',
+    is_deleted     tinyint(1)  default 0                 null comment '软删除 0未删 1已删',
+    deleted_at     timestamp                             null comment '删除时间',
+    constraint fk_products_category
+        foreign key (category_id) references Categories (category_id)
+            on update cascade
+)
+    comment '商品信息主表';
+
+create index idx_category_id
+    on Products (category_id);
+
+create index idx_category_status
+    on Products (category_id, status, created_at);
+
+create index idx_created_at
+    on Products (created_at);
+
+create index idx_is_deleted
+    on Products (is_deleted);
+
+create fulltext index idx_name
+    on Products (name);
+
+create index idx_new
+    on Products (is_new, created_at, status, is_deleted);
+
+create index idx_recommend
+    on Products (is_recommend, recommend_date, status, is_deleted);
+
+create index idx_status
+    on Products (status);
+
+create index idx_updated_at
+    on Products (updated_at);
+
+
+数据源: MyDemo@8.130.212.116
+架构: MyDemo
+表: Recommended_Foods
+
+-- 智能推荐食品表
+
+-- auto-generated definition
+create table Recommended_Foods
+(
+    recommend_id     int auto_increment comment '推荐记录唯一标识'
+        primary key,
+    product_id       int unsigned                         not null comment '被推荐的商品ID',
+    recommend_type   varchar(50)                          not null comment 'hot_sale/seasonal/similar/personalized',
+    recommend_reason varchar(500)                         null comment 'AI生成的推荐理由',
+    target_user_id   int                                  null comment 'NULL=全局推荐，非NULL=个性化推荐',
+    score            float                                null comment '推荐算法分数(0-1)',
+    valid_from       timestamp  default CURRENT_TIMESTAMP not null comment '推荐开始时间',
+    valid_until      timestamp                            null comment '推荐结束时间（NULL=永久有效）',
+    click_count      int        default 0                 not null comment '用户点击次数',
+    order_count      int        default 0                 not null comment '通过推荐产生的订单数',
+    created_at       timestamp  default CURRENT_TIMESTAMP not null comment '推荐记录创建时间',
+    updated_at       timestamp  default CURRENT_TIMESTAMP not null on update CURRENT_TIMESTAMP comment '推荐记录更新时间',
+    creator          int                                  null comment '创建推荐的用户ID',
+    updator          int                                  null comment '最后更新推荐的用户ID',
+    is_deleted       tinyint(1) default 0                 not null comment '0=未删除，1=已删除',
+    deleted_at       timestamp                            null comment '软删除时间戳',
+    constraint fk_recommended_foods_product
+        foreign key (product_id) references Products (product_id)
+            on update cascade on delete cascade
+)
+    comment '智能推荐食品表' collate = utf8mb4_0900_ai_ci;
+
+create index idx_created_at
+    on Recommended_Foods (created_at);
+
+create index idx_is_deleted
+    on Recommended_Foods (is_deleted);
+
+create index idx_product_id
+    on Recommended_Foods (product_id);
+
+create index idx_recommend_type
+    on Recommended_Foods (recommend_type);
+
+create index idx_target_user
+    on Recommended_Foods (target_user_id);
+
+create index idx_type_score
+    on Recommended_Foods (recommend_type, score, valid_from, is_deleted);
+
+create index idx_valid_time
+    on Recommended_Foods (valid_from, valid_until, is_deleted);
+
+
+数据源: MyDemo@8.130.212.116
+架构: MyDemo
+表: Sales_Stats
+
+-- 每日商品销售统计
+
+-- auto-generated definition
+create table Sales_Stats
+(
+    stat_id       int auto_increment comment '统计记录唯一标识'
+        primary key,
+    product_id    int unsigned                             not null comment '统计的商品ID',
+    date          date                                     not null comment '统计日期',
+    total_sold    int            default 0                 not null comment '当日销售数量',
+    total_revenue decimal(10, 2) default 0.00              not null comment '当日销售总额',
+    created_at    timestamp      default CURRENT_TIMESTAMP not null comment '统计记录创建时间',
+    updated_at    timestamp      default CURRENT_TIMESTAMP not null on update CURRENT_TIMESTAMP comment '统计记录更新时间',
+    creator       int                                      null comment '创建统计的用户ID（系统自动）',
+    updator       int                                      null comment '更新统计的用户ID（系统自动）',
+    constraint idx_product_date
+        unique (product_id, date),
+    constraint fk_sales_stats_product
+        foreign key (product_id) references Products (product_id)
+            on update cascade on delete cascade
+)
+    comment '每日商品销售统计' collate = utf8mb4_0900_ai_ci;
+
+create index idx_created_at
+    on Sales_Stats (created_at);
+
+create index idx_date
+    on Sales_Stats (date);
+
+create index idx_total_sold
+    on Sales_Stats (total_sold);
+
+
+
+
+数据源: MyDemo@8.130.212.116
+架构: MyDemo
+表: Supported_Categories
+
+-- YOLO视觉模型支持的品类白名单
+
+-- auto-generated definition
+create table Supported_Categories
+(
+    category_id          int auto_increment comment '白名单ID'
+        primary key,
+    category_name        varchar(100)                         not null comment '品类名称',
+    category_code        varchar(50)                          null comment '品类英文编码',
+    model_version        varchar(20)                          not null comment '训练该品类的模型版本号',
+    confidence_threshold float      default 0.5               null comment '该品类的推荐置信度阈值',
+    is_active            tinyint(1) default 1                 null comment '0=停用，1=启用',
+    description          varchar(500)                         null comment '品类详细说明',
+    sample_image_url     varchar(500)                         null comment '该品类的标准示例图片URL',
+    created_at           timestamp  default CURRENT_TIMESTAMP not null comment '记录创建时间',
+    updated_at           timestamp  default CURRENT_TIMESTAMP not null on update CURRENT_TIMESTAMP comment '记录更新时间',
+    creator              int                                  null comment '创建该白名单的用户ID',
+    updator              int                                  null comment '最后更新该白名单的用户ID',
+    constraint idx_category_code
+        unique (category_code),
+    constraint idx_category_name
+        unique (category_name)
+)
+    comment 'YOLO视觉模型支持的品类白名单' collate = utf8mb4_0900_ai_ci;
+
+create index idx_is_active
+    on Supported_Categories (is_active);
+
+create index idx_model_version
+    on Supported_Categories (model_version);
+
+
+购物车表 Cart
+CREATE TABLE Cart (
+    cart_id INT AUTO_INCREMENT PRIMARY KEY COMMENT '购物车项唯一标识',
+    user_id INT NOT NULL COMMENT '用户ID',
+    product_id INT UNSIGNED NOT NULL COMMENT '商品ID',
+    quantity INT NOT NULL DEFAULT 1 COMMENT '购买数量',
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL COMMENT '加入购物车时间',
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL ON UPDATE CURRENT_TIMESTAMP COMMENT '最后更新时间',
+
+    UNIQUE KEY idx_user_product (user_id, product_id),
+    INDEX idx_user_id (user_id),
+
+    CONSTRAINT fk_cart_product FOREIGN KEY (product_id)
+        REFERENCES Products(product_id) ON UPDATE CASCADE
+) COMMENT '用户购物车表' COLLATE=utf8mb4_0900_ai_ci;
+
+支付记录表 (Payments)
+CREATE TABLE Payments (
+    payment_id BIGINT AUTO_INCREMENT PRIMARY KEY COMMENT '支付记录ID',
+    order_id INT NOT NULL COMMENT '关联订单ID',
+    order_no VARCHAR(32) NOT NULL COMMENT '订单号',
+    payment_method VARCHAR(20) NOT NULL COMMENT 'alipay/wechat/cash',
+    payment_status VARCHAR(20) DEFAULT 'pending' NOT NULL COMMENT 'pending/success/failed/refunded',
+    transaction_id VARCHAR(64) NULL COMMENT '第三方支付交易号',
+    amount DECIMAL(10,2) NOT NULL COMMENT '支付金额',
+    paid_at TIMESTAMP NULL COMMENT '支付成功时间',
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL,
+
+    INDEX idx_order_id (order_id),
+    UNIQUE KEY idx_order_no (order_no),
+    INDEX idx_transaction (transaction_id),
+
+    CONSTRAINT fk_payment_order FOREIGN KEY (order_id)
+        REFERENCES Orders(order_id) ON UPDATE CASCADE ON DELETE CASCADE
+) COMMENT '支付记录表' COLLATE=utf8mb4_0900_ai_ci;
